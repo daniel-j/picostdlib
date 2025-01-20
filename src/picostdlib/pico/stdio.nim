@@ -175,7 +175,7 @@ proc print*(s: string) =
 proc stdinReadLine*(echoInput: bool = true): string =
   while true:
     let res = getcharTimeoutUs(100_000)
-    if res != PicoErrorTimeout.int:
+    if res >= 0 and res != PicoErrorTimeout.int:
       let character = res.char
       if character == '\r':
         echo ""
