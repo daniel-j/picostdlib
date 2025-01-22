@@ -218,7 +218,7 @@ proc getDreq*(i2c: ptr I2cInst; isTx: bool): cuint {.importc: "i2c_get_dreq".}
 
 ## Nim helpers rev 0.2.0
 type  
-  Pull = enum
+  Pull* = enum
     Up, Disable
   
 proc i2cSetupNim*(port: ptr I2cInst; 
@@ -235,10 +235,10 @@ proc i2cSetupNim*(port: ptr I2cInst;
   discard port.init(freq)
   sda.setFunction(I2c)
   scl.setFunction(I2c)
-  if pull == Disable:
+  if pull == Pull.Disable:
     sda.disablePulls()
     scl.disablePulls()
-  elif pull == Up:
+  elif pull == Pull.Up:
     sda.pullUp()
     scl.pullUp()
   
