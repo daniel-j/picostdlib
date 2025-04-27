@@ -216,62 +216,64 @@ proc getDreq*(i2c: ptr I2cInst; isTx: bool): cuint {.importc: "i2c_get_dreq".}
 {.pop.}
 
 
-## Nim helpers
-
-template i2cSetupNim*(blokk: ptr I2cInst, pSda, pScl: Gpio, freq: uint, pull = true) =
+## Nim helpers rev 0.2.0
+type  
+  Pull* = enum
+    Up, Disable
+  
+proc i2cSetupNim*(port: ptr I2cInst; 
+                 pSda, pScl: uint8; 
+                 freq: uint; 
+                 pull = Pull.Up): ptr I2cInst =
   #sugar setup for i2c:
-  #blokk= block i2c0 / i2c1 (see pinout)
-  #pSda/pScl = the pins you want use (ex: 2.Gpio, 3.Gpio) I do not recommend the use of 0.Gpio, 1.Gpio
-  #freq = is the working frequency of the i2c device (see device manual; ex: 100000)
-  #pull = use or not to use pullup (default = true)
-  var i2cx = blokk
-  discard i2cx.init(freq)
-  pSda.setFunction(GpioFunction.I2c)
-  pScl.setFunction(GpioFunction.I2c)
-  if pull:
-    pSda.pullUp()
-    pScl.pullUp()
-  else:
-    pSda.pullDown()
-    pScl.pullDown()
-
-proc i2cWriteBlockingNim*(
-    i2c: ptr I2cInst,
-    address: I2cAddress,
-    data: var openArray[uint8],
-    noStop: bool = false
-  ): int =
+  #port = block i2c0 / i2c1 (see pinout)
+  #pSda/pScl = the pins you want use (ex: 2.Gpio, 3.Gpio) I do not recommend the use of 0.Gpio, 1.Gpio.
+  #freq = is the working frequency of the i2c device (see device manual; ex: 100000).
+  #pull = Disable: disable pullup, UP: active pullUp (default Up).
+  let sda: Gpio = pSda.Gpio
+  let scl: Gpio = pScl.Gpio
+  discard port.init(freq)
+  sda.setFunction(I2c)
+  scl.setFunction(I2c)
+  if pull == Pull.Disable:
+    sda.disablePulls()
+    scl.disablePulls()
+  elif pull == Pull.Up:
+    sda.pullUp()
+    scl.pullUp()
+  
+proc i2cWriteBlockingNim*(i2c: ptr I2cInst;
+                          address: uint8;
+                          data: var openArray[uint8];
+                          noStop: bool = false): int {.inline.} =
   ## Write bytes to I2C bus.
   ## If `noStop` is `true`, master retains control of the bus at the end of
   ## the transfer.
-  result = i2c.writeBlocking(address, data[0].addr, data.len.uint, noStop)
-
-proc i2cReadBlockingNim*(
-    i2c: ptr I2cInst,
-    address: I2cAddress,
-    numBytes: uint,
-    noStop: bool = false
-  ): seq[uint8] =
+  result = i2c.writeBlocking(address.I2cAddress, data[0].addr, data.len.uint, noStop)
+  
+proc i2cReadBlockingNim*(i2c: ptr I2cInst;
+                         address: uint8;
+                         numBytes: uint;
+                         noStop: bool = false): seq[uint8] {.inline.} =
   ## Read `numBytes` bytes from I2C bus and return a seq containing the bytes
   ## that were read. In case of error return a 0-length seq. If `noStop` is
   ## `true`, master retains control of the bus at the end of the transfer.
-
   result.setLen(numBytes)
-  let n = i2c.readBlocking(address, result[0].addr, numBytes.uint, noStop)
-  result.setLen(max(0, n))
+  let n = i2c.readBlocking(address.I2cAddress, result[0].addr, numBytes.uint, noStop)
+  result.setLen(max(0,n))
 
 proc i2cReadBlockingNim*[N: Natural](
-    i2c: ptr I2cInst,
-    address: I2cAddress,
+    i2c: ptr I2cInst;
+    address: uint8;
     dest: var array[N, uint8],
-    noStop: bool = false
-  ): int =
+    noStop: bool = false): int {.inline.} =
   ## Fill the array `dest` with bytes read from I2C bus. Return the number of
   ## bytes that were read successfully. Negative values are error codes (refer
   ## to Pico SDK documentation). In case of error return a 0-length seq. If
   ## `noStop` is `true`, master retains control of the bus at the end of the
   ## transfer.
-  result = i2c.readBlocking(address, dest[0].addr, N.uint, noStop)
+  result = i2c.readBlocking(address.I2cAddress, dest[0].addr, N.uint, noStop)
+  
 
 when defined(runtests):
   i2cSetupNim(DefaultI2c.i2cGetInstance(), DefaultI2cSdaPin, DefaultI2cSclPin, 1000)
