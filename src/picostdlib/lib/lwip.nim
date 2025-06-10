@@ -62,6 +62,7 @@ else:
     sysPath picoSdkPath / "src/rp2_common/pico_platform_compiler/include"
     sysPath picoSdkPath / "src/rp2_common/pico_platform_sections/include"
     sysPath picoSdkPath / "src/rp2_common/pico_platform_panic/include"
+    sysPath picoSdkPath / "src/rp2_common/pico_platform_common/include"
     sysPath picoSdkPath / "src/rp2_common/pico_rand/include"
     sysPath picoSdkPath / "src/rp2_common/pico_cyw43_driver/include"
     sysPath cmakeBinaryDir / "generated/pico_base"

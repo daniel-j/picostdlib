@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13...3.27)
+cmake_minimum_required(VERSION 3.13)
 
 # Set CMake build type. Debug, Release, MinSizeRel, RelWithDebInfo
 set(CMAKE_BUILD_TYPE Release)
