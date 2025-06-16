@@ -48,7 +48,7 @@ library [dependencies](https://github.com/raspberrypi/pico-sdk#quick-start-your-
 wrap some C libraries, which depends on libclang.
 See its installation guide [here](https://github.com/PMunch/futhark#installation).
 
-4. From the terminal, run `nimble install https://github.com/EmbeddedNim/picostdlib`.
+4. From the terminal, run `nimble install https://github.com/daniel-j/picostdlib`.
 
 5. Run `piconim init <project-name>` to create a new project directory from a
 template. This will create a new folder, so make sure you are in the parent folder.
