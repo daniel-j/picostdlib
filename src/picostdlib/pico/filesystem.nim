@@ -8,7 +8,7 @@ when defined(pico_filesystem) or defined(nimcheck):
 
   {.emit: "// picostdlib include: " & picoVfsPath / "include".}
   {.compile: picoVfsPath / "src" / "filesystem" / "vfs.c".}
-  {.emit: "// picostdlib import: pico_clib_interface pico_sync".}
+  {.emit: "// picostdlib import: pico_clib_interface pico_sync -Wl,--wrap=_ftello_r".}
 
   when defined(pico_filesystem_default) or defined(nimcheck):
     {.compile: picoVfsPath / "src" / "filesystem" / "fs_init.c".}

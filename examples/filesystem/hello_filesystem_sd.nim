@@ -48,13 +48,13 @@ else:
     let lastTime = getLastModificationTime("/sd/HELLO.txt")
     echo "lasttime ", lastTime
 
-    let newTime = lastTime - 1.hours
+    # let newTime = lastTime - 1.hours
 
-    echo "newtime ", newTime
+    # echo "newtime ", newTime
 
-    setLastModificationTime("/sd/HELLO.txt", newTime)
+    # setLastModificationTime("/sd/HELLO.txt", newTime)
 
-    echo "updated ", getLastModificationTime("/sd/HELLO.txt")
+    # echo "updated ", getLastModificationTime("/sd/HELLO.txt")
 
   block:
     echo "reading file"
