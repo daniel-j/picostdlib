@@ -135,6 +135,16 @@ proc forceIrq*(alarmNum: HardwareAlarmNum) {.importc: "hardware_alarm_force_irq"
   ##
   ## @param alarm_num the hardware alarm number
 
+proc getIrqNum*(timer: ptr TimerHw; alarmNum: HardwareAlarmNum): cuint {.importc: "timer_hardware_alarm_get_irq_num".}
+  ## Returns the \ref irq_num_t for the alarm interrupt from the given alarm on the given timer instance
+  ## \param timer the timer instance
+  ## \param alarm_num the alarm number
+  ## \sa TIMER_ALARM_IRQ_NUM
+
+proc getIrqNum*(alarmNum: HardwareAlarmNum): cuint {.importc: "hardware_alarm_get_irq_num".}
+  ## Returns the \ref irq_num_t for the alarm interrupt from the given alarm on the default timer instance
+  ## \param alarm_num the alarm number
+
 {.pop.}
 
 # Nim helpers

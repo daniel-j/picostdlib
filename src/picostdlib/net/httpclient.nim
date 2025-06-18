@@ -4,7 +4,7 @@ import ./common
 
 export common, httpcore, tables
 
-when not defined(release) or defined(debugHttp):
+when defined(debugHttp):
   template debugv(text: string) = echo text
 else:
   template debugv(text: string) = discard
@@ -50,7 +50,7 @@ type
     # request
     reqUri: Uri
     reqHeaders: Table[string, string]
-    useHttp1_0: bool
+    useHttp1_0*: bool
     base64Authorization: string
     userAgent: string
     timeoutMs: int
@@ -180,18 +180,19 @@ proc handleChunked(self: HttpClient) =
       self.resRecv = self.resRecv[self.chunkedRemaining + 2 .. ^1]
       self.chunkedRemaining -= body.len
       assert(self.chunkedRemaining == 0)
-      self.recvCb(body)
+      if not self.recvCb.isNil:
+        self.recvCb(body)
       self.chunkedState = ParseHeader
       self.handleChunked()
     elif self.resRecv.len <= self.chunkedRemaining:
       let bodylen = self.resRecv.len
-      self.recvCb(move self.resRecv)
+      if not self.recvCb.isNil:
+        self.recvCb(move self.resRecv)
       self.resRecv = ""
       self.chunkedRemaining -= bodylen
 
   of ParseComplete:
     return
-
 
 proc handleRecv(self: HttpClient) =
   if self.resRecv.len == 0: return
@@ -236,7 +237,8 @@ proc handleRecv(self: HttpClient) =
       if self.response.transferEncoding == TransferChunked:
         self.handleChunked()
       else:
-        self.recvCb(move self.resRecv)
+        if not self.recvCb.isNil:
+          self.recvCb(move self.resRecv)
         self.resRecv = ""
 
 
@@ -254,33 +256,49 @@ proc sendHeaders(self: HttpClient) =
 
   header.add(" HTTP/1.")
   header.add(if self.useHttp1_0: '0' else: '1')
+  header.add(httpNewLine)
 
-  header.add(httpNewLine & "Host: ")
+  assert(header.len == self.socket.write(header))
+  header = ""
+
+  header.add("Host: ")
   header.add(self.reqUri.hostname)
   if not (self.reqUri.scheme.toLower() == "http" and self.reqUri.port == "80") and
      not (self.reqUri.scheme.toLower() == "https" and self.reqUri.port == "443"):
     header.add(':')
     header.add(self.reqUri.port)
-
-  if self.userAgent.len != 0:
-    header.add(httpNewLine & "User-Agent: ")
-    header.add(self.userAgent)
-
-  if self.base64Authorization.len != 0:
-    header.add(httpNewLine & "Authorization: Basic ")
-    header.add(self.base64Authorization)
-
-  header.add(httpNewLine & "Connection: ")
-  header.add(if self.canReuse: "keep-alive" else: "close")
   header.add(httpNewLine)
 
+  assert(header.len == self.socket.write(header))
+  header = ""
+
+  if self.userAgent.len != 0:
+    header = "User-Agent: " & self.userAgent & httpNewLine
+    assert(header.len == self.socket.write(header))
+    header = ""
+
+  if self.base64Authorization.len != 0:
+    header = "Authorization: Basic " & self.base64Authorization & httpNewLine
+    assert(header.len == self.socket.write(header))
+    header = ""
+
+  header = "Connection: " & (if self.canReuse: "keep-alive" else: "close") & httpNewLine
+  assert(header.len == self.socket.write(header))
+  header = ""
+
+  header = "Accept: */*" & httpNewLine
+  assert(header.len == self.socket.write(header))
+  header = ""
+
   for name, value in self.reqHeaders:
-    header.add(name)
+    header = name
     header.add(": ")
     header.add(value)
     header.add(httpNewLine)
+    assert(header.len == self.socket.write(header))
+    header = ""
 
-  header.add(httpNewLine)
+  header = httpNewLine
 
   assert(header.len == self.socket.write(header))
 
@@ -316,13 +334,15 @@ proc connect(self: HttpClient; cb: proc (success: bool)) =
   self.socket.setNoDelay(true)
 
   self.resState = StateHeaderFirst
+  self.resRecv = ""
   self.response.reset()
   self.response.contentLength = -1
 
   let innerSelf = self
   self.socket.recvCb = proc(len: uint16; totLen: uint16) =
     debugv(":httpc recv - len: " & $len & " totLen: " & $totLen)
-    innerSelf.resRecv &= innerSelf.socket.readStr(len)
+    let data = innerSelf.socket.readStr(len)
+    innerSelf.resRecv &= data
     innerSelf.handleRecv()
 
 proc addHeader*(self: HttpClient; name: string; value: string) =
@@ -352,3 +372,10 @@ proc post*(self: HttpClient; payload: string; cb: HttpCallback) {.inline.} = sel
 proc put*(self: HttpClient; payload: string; cb: HttpCallback) {.inline.} = self.sendRequest(HttpPut, payload, cb)
 proc patch*(self: HttpClient; payload: string; cb: HttpCallback) {.inline.} = self.sendRequest(HttpPatch, payload, cb)
 
+proc close*(self: HttpClient) =
+  if not self.socket.isNil:
+    discard self.socket.close()
+proc isConnected*(self: HttpClient): bool =
+  if self.socket.isNil:
+    return false
+  return self.socket.isConnected()

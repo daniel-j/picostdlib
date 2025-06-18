@@ -11,9 +11,11 @@ const WIFI_PASSWORD {.strdefine.} = ""
 const HTTP_URL {.strdefine.} = "https://httpbin.org/headers"
 
 proc runHttpClientTest() =
-  var client = newHttpClient()
+  let client = newHttpClient()
 
   echo "http client created."
+
+  # client.useHttp1_0 = true
 
   client.setUrl(HTTP_URL)
 
@@ -25,7 +27,10 @@ proc runHttpClientTest() =
   client.recvCb = proc (data: string) =
     echo "body: ", repr data
 
-  sleepMs(60*1000)
+  while client.isConnected():
+    sleepMs(100)
+
+  echo "closed connection"
 
 proc httpClientExample*() =
   if cyw43ArchInit() != PicoErrorNone:

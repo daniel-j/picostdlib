@@ -64,6 +64,7 @@ import picostdlib/pico/platform
 import picostdlib/pico/rand
 import picostdlib/pico/runtime_init
 import picostdlib/pico/sem
+import picostdlib/pico/sha256
 import picostdlib/pico/sleep
 import picostdlib/pico/stdio
 import picostdlib/pico/sync

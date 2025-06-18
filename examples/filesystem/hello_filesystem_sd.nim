@@ -1,5 +1,6 @@
 import picostdlib
 import picostdlib/pico/filesystem
+import std/times
 
 # see hello_filesystem_sd.nims
 
@@ -23,16 +24,37 @@ proc fsInit(): bool =
 
   return true
 
+proc settimeofday(tv: var Timeval; tz: pointer = nil): cint {.importc: "settimeofday", header: "<time.h>".}
+
 if not fsInit():
   echo "Failed to mount filesystem!"
 else:
   echo "Successfully mounted filesystem"
 
   block:
+    removeFile("/sd/HELLO.txt")
+
+    var futureTime = Timeval(tv_sec: posix.Time(1750000000))
+    discard settimeofday(futureTime)
+
+    sleepMs(1000)
+
+
     echo "writing file"
     var fp = open("/sd/HELLO.txt", fmWrite)
     fp.writeLine("Hello world")
     close(fp)
+
+    let lastTime = getLastModificationTime("/sd/HELLO.txt")
+    echo "lasttime ", lastTime
+
+    let newTime = lastTime - 1.hours
+
+    echo "newtime ", newTime
+
+    setLastModificationTime("/sd/HELLO.txt", newTime)
+
+    echo "updated ", getLastModificationTime("/sd/HELLO.txt")
 
   block:
     echo "reading file"

@@ -31,20 +31,80 @@ else:
 proc `==`*(a, b: LockNum): bool {.borrow.}
 proc `$`*(a: LockNum): string {.borrow.}
 
+## hardware_sync
+
+proc nop*() {.importc: "__nop".}
+  ## Insert a NOP instruction in to the code path.
+  ##
+  ## NOP does nothing for one cycle. On RP2350 Arm binaries this is forced to be
+  ## a 32-bit instruction to avoid dual-issue of NOPs.
+
 proc sev*() {.importc: "__sev".}
-proc wev*() {.importc: "__wev".}
-proc wfi*() {.importc: "__wfi".}
+  ## Insert a SEV instruction in to the code path.
+  ##
+  ## The SEV (send event) instruction sends an event to both cores.
+
 proc wfe*() {.importc: "__wfe".}
+  ## Insert a WFE instruction in to the code path.
+  ##
+  ## The WFE (wait for event) instruction waits until one of a number of
+  ## events occurs, including events signalled by the SEV instruction on either core.
+
+proc wfi*() {.importc: "__wfi".}
+  ## Insert a WFI instruction in to the code path.
+  ##
+  ## The WFI (wait for interrupt) instruction waits for a interrupt to wake up the core.
+
+proc dmb*() {.importc: "__dmb".}
+  ## Insert a DMB instruction in to the code path.
+  ##
+  ## The DMB (data memory barrier) acts as a memory barrier, all memory accesses prior to this
+  ## instruction will be observed before any explicit access after the instruction.
+
+proc dsb*() {.importc: "__dsb".}
+  ## Insert a DSB instruction in to the code path.
+  ##
+  ## The DSB (data synchronization barrier) acts as a special kind of data
+  ## memory barrier (DMB). The DSB operation completes when all explicit memory
+  ## accesses before this instruction complete.
+
+proc isb*() {.importc: "__isb".}
+  ## Insert a ISB instruction in to the code path.
+  ##
+  ## ISB acts as an instruction synchronization barrier. It flushes the pipeline of the processor,
+  ## so that all instructions following the ISB are fetched from cache or memory again, after
+  ## the ISB instruction has been completed.
+
+proc disableInterrupts*(): uint32 {.importc: "disable_interrupts".}
+  ## Explicitly disable interrupts on the calling core
+
+proc enableInterrupts*(): uint32 {.importc: "enable_interrupts".}
+  ## Explicitly enable interrupts on the calling core
 
 proc saveAndDisableInterrupts*(): uint32 {.importc: "save_and_disable_interrupts".}
-  ## Save and disable interrupts
+  ## Disable interrupts on the calling core, returning the previous interrupt state
   ##
-  ## \return The prior interrupt enable status for restoration later via restore_interrupts()
+  ## This method is commonly paired with \ref restore_interrupts_from_disabled() to temporarily
+  ## disable interrupts around a piece of code, without needing to care whether interrupts
+  ## were previously enabled
+  ##
+  ## \return The prior interrupt enable status for restoration later via \ref restore_interrupts_from_disabled()
+  ## or \ref restore_interrupts()
 
 proc restoreInterrupts*(status: uint32) {.importc: "restore_interrupts".}
-  ## Restore interrupts to a specified state
+  ## Restore interrupts to a specified state on the calling core
   ##
   ## \param status Previous interrupt status from save_and_disable_interrupts()
+
+proc restoreInterruptsFromDisabled*(status: uint32) {.importc: "restore_interrupts_from_disabled".}
+  ## Restore interrupts to a specified state on the calling core with restricted transitions
+  ##
+  ## This method should only be used when the current interrupt state is known to be disabled,
+  ## e.g. when paired with \ref save_and_disable_interrupts()
+  ##
+  ## \param status Previous interrupt status from save_and_disable_interrupts()
+
+## hardware_sync_spin_lock
 
 proc spinLockInstance*(lockNum: LockNum): ptr SpinLock {.importc: "spin_lock_instance".}
   ## Get HW Spinlock instance from number
@@ -102,6 +162,8 @@ proc spinLockInit*(lockNum: LockNum): ptr SpinLock {.importc: "spin_lock_init".}
 
 proc spinLocksReset*() {.importc: "spin_locks_reset".}
   ## Release all spin locks
+
+## hardware_sync
 
 proc nextStripedSpinLockNum*(): uint {.importc: "next_striped_spin_lock_num".}
   ## Return a spin lock number from the _striped_ range

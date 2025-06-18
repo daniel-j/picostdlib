@@ -27,6 +27,9 @@ set(PICO_CXX_ENABLE_EXCEPTIONS 1)
 # Uncomment to disable picotool binary info
 # set(PICO_NO_BINARY_INFO 1)
 
+# Uncomment to enable fastest supported clock speed
+# set(PICO_USE_FASTEST_SUPPORTED_CLOCK 1)
+
 execute_process(
   COMMAND nimble path picostdlib
   OUTPUT_VARIABLE PICOSTDLIB_DIR
@@ -98,6 +101,11 @@ target_link_libraries(${OUTPUT_NAME}
 target_compile_definitions(${OUTPUT_NAME} PRIVATE
   # CYW43_HOST_NAME="PicoW"
   PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=2000
+  PICO_VFS_NO_RTC=0
+  _POSIX_TIMERS=200809L
+  _POSIX_MONOTONIC_CLOCK=200809L
+  _POSIX_CPUTIME=200809L
+  _POSIX_THREAD_CPUTIME=200809L
 )
 
 # enable usb output, disable uart output

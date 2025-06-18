@@ -1,5 +1,5 @@
-import ./error
-export error
+import ./error, ./types
+export error, types
 
 import ../helpers
 {.localPassC: "-I" & picoSdkPath & "/src/rp2_common/pico_stdio/include".}
@@ -76,6 +76,45 @@ proc stdioSetCharsAvailableCallback*(fn: proc (param: pointer) {.cdecl.}; param:
   ##
   ## \param fn Callback function to be called when characters are available. Pass NULL to cancel any existing callback
   ## \param param Pointer to pass to the callback
+
+proc stdioGetUntil*(buf: ptr char; len: cint; until: AbsoluteTime): cint {.importc: "stdio_get_until".}
+  ## Waits until a timeout to read at least one character into a buffer
+  ##
+  ## This method returns as soon as input is available, but more characters may
+  ## be returned up to the end of the buffer.
+  ##
+  ## \param buf the buffer to read into
+  ## \param len the length of the buffer
+  ## \return the number of characters read or PICO_ERROR_TIMEOUT
+  ## \param until the time after which to return PICO_ERROR_TIMEOUT if no characters are available
+
+proc stdioPutString*(s: ptr char; len: cint; newline: bool; cr_translation: bool): cint {.importc: "stdio_put_string".}
+  ## Prints a buffer to stdout with optional newline and carriage return insertion
+  ##
+  ## This method returns as soon as input is available, but more characters may
+  ## be returned up to the end of the buffer.
+  ##
+  ## \param s the characters to print
+  ## \param len the length of s
+  ## \param newline true if a newline should be added after the string
+  ## \param cr_translation true if line feed to carriage return translation should be performed
+  ## \return the number of characters written
+
+proc stdioGetchar*(): cint {.importc: "stdio_getchar".}
+  ## Alias for \ref getchar that definitely does not go thru the implementation
+  ## in the standard C library even when \ref PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0
+
+proc stdioPutchar*(c: cint): cint {.importc: "stdio_putchar".}
+  ## Alias for \ref putchar that definitely does not go thru the implementation
+  ## in the standard C library even when \ref PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0
+
+proc stdioPuts(s: ptr char): cint {.importc: "stdio_puts".}
+  ## Alias for \ref puts that definitely does not go thru the implementation
+  ## in the standard C library even when \ref PICO_STDIO_SHORT_CIRCUIT_CLIB_FUNCS == 0
+
+# int stdio_vprintf(const char *format, va_list va);
+
+# int __printflike(1, 0) stdio_printf(const char* format, ...);
 
 {.pop.}
 

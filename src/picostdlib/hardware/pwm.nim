@@ -80,31 +80,26 @@ proc setClkDiv*(pwmConfig: ptr PwmConfig; divider: range[cfloat(1) .. cfloat(256
   ## =============  ======
   ##
 
-proc setClkDivIntFrac*(pwmConfig: ptr PwmConfig; integer: uint8; fract: uint8) {.importc: "pwm_config_set_clkdiv_int_frac".}
+proc setClkDivIntFrac*(pwmConfig: ptr PwmConfig; divInt: uint32; divFrac4: uint8) {.importc: "pwm_config_set_clkdiv_int_frac4".}
   ## Set PWM clock divider in a PWM configuration using an 8:4 fractional value
   ##
   ## \param c PWM configuration struct to modify
-  ## \param integer 8 bit integer part of the clock divider. Must be greater than or equal to 1.
-  ## \param fract 4 bit fractional part of the clock divider
+  ## \param div_int 8 bit integer part of the clock divider. Must be greater than or equal to 1.
+  ## \param div_frac4 4 bit fractional part of the clock divider
   ##
   ## If the divide mode is free-running, the PWM counter runs at clk_sys / div.
   ## Otherwise, the divider reduces the rate of events seen on the B pin input (level or edge)
   ## before passing them on to the PWM counter.
 
-proc setClkDivInt*(pwmConfig: ptr PwmConfig; divider: cuint) {.importc: "pwm_config_set_clkdiv_int".}
-  ## Set PWM clock divider in a PWM configuration.
+proc setClkDivInt*(pwmConfig: ptr PwmConfig; divInt: uint32) {.importc: "pwm_config_set_clkdiv_int".}
+  ## Set PWM clock divider in a PWM configuration
+  ##
+  ## \param c PWM configuration struct to modify
+  ## \param div_int Integer value to reduce counting rate by. Must be greater than or equal to 1 and less than 256.
   ##
   ## If the divide mode is free-running, the PWM counter runs at clk_sys / div.
-  ## Otherwise, the divider reduces the rate of events seen on the B pin input
-  ## (level or edge) before passing them on to the PWM counter.
-  ##
-  ## **Parameters**
-  ##
-  ## =============  ======
-  ## **pwmConfig**   PWM configuration object to modify
-  ## **divider**     Integer value to reduce counting rate by. Must be greater than or equal to 1.
-  ## =============  ======
-  ##
+  ## Otherwise, the divider reduces the rate of events seen on the B pin input (level or edge)
+  ## before passing them on to the PWM counter.
 
 proc setClkDivMode*(pwmConfig: ptr PwmConfig; mode: PwmClockDivideMode) {.importc: "pwm_config_set_clkdiv_mode".}
   ## Set PWM counting mode in a PWM configuration.

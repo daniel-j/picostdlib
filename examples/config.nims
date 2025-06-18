@@ -11,6 +11,7 @@ switch("d", "piconimCsourceDir:" & getCurrentDir() & "/template/csource")
 switch("d", "futharkgen")
 
 switch("d", "debugSocket")
+switch("d", "debugHttp")
 switch("d", "debugDns")
 switch("d", "debugMqtt")
 

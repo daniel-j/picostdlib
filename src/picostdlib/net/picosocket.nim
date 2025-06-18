@@ -7,7 +7,7 @@ import ../asyncdispatch
 
 export common, asyncdispatch
 
-when not defined(release) or defined(debugSocket):
+when defined(debugSocket):
   template debugv(text: string) = echo text
 else:
   template debugv(text: string) = discard
@@ -18,7 +18,6 @@ macro ptr2ref(arg: pointer; T: typedesc; name: untyped) =
     let `name` = cast[`T`](`arg`)
 
 type
-
   SocketType* = enum
     SOCK_STREAM = 1 # Sequenced, reliable, connection-based byte streams
     SOCK_DGRAM = 2 # Connectionless, unreliable datagrams of fixed maximum length.
@@ -236,6 +235,7 @@ proc altcpErrCb(arg: pointer; err: ErrT) {.cdecl.} =
   altcpErr(self.pcb, nil)
   self.err = err
   self.pcb = nil
+  self.state = STATE_PEER_CLOSED
   GC_unref(self)
 
 proc altcpPollCb(arg: pointer; pcb: ptr AltcpPcb): ErrT {.cdecl.} =
@@ -285,7 +285,7 @@ proc altcpRecvCb(arg: pointer; pcb: ptr AltcpPcb; pb: ptr Pbuf; err: ErrT): ErrT
     debugv(":recv " & $pb.totLen & " (" & $self.rxBuf.totLen & " total)")
     pbufCat(self.rxBuf, pb)
     debugv(":recv (" & $self.rxBuf.totLen & " total)")
-    # altcpRecved is called in consume()
+    # altcpRecved is called in read()
   else:
     debugv(":recv " & $pb.totLen & " (new)")
     self.rxBuf = pb
@@ -325,10 +325,11 @@ proc write*(self: Socket[SOCK_STREAM]; data: string): int =
     return -1
   if data.len == 0:
     return 0
+  debugv(":write " & repr data)
+  var written = 0
   withLwipLock:
     var remaining = data.len
     var err = ErrOk
-    var written = 0
     while remaining > 0:
       var available = altcpSndbuf(self.pcb).int
       if remaining <= available:
@@ -365,7 +366,7 @@ proc available*(self: SocketAny): uint16 =
   return self.rxBuf.totLen - self.rxBufOffset
 
 proc isConnected*(self: Socket[SOCK_STREAM]): bool =
-  return not self.pcb.isNil and (self.state == STATE_CONNECTED or self.available() > 0)
+  return not self.pcb.isNil or (self.state == STATE_CONNECTED or self.available() > 0)
 
 proc read*(self: Socket[SOCK_STREAM]; size: uint16; buf: ptr char = nil): int =
   debugv(":read " & $size)

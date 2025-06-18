@@ -135,7 +135,7 @@ proc readTimeoutUs*(i2c: ptr I2cInst; address: I2cAddress; dst: ptr uint8; len: 
   ## \param timeout_us The time that the function will wait for the entire transaction to complete
   ## \return Number of bytes read, or PICO_ERROR_GENERIC if address not acknowledged, no device present, or PICO_ERROR_TIMEOUT if a timeout occurred.
 
-proc writeBlocking*(i2c: ptr I2cInst, address: I2cAddress, data: ptr uint8, len: csize_t, noStop: bool): cint {.importc: "i2c_write_blocking".}
+proc writeBlocking*(i2c: ptr I2cInst; address: I2cAddress; src: ptr uint8; len: csize_t; noStop: bool): cint {.importc: "i2c_write_blocking".}
   ## Attempt to write specified number of bytes to address, blocking
   ##
   ## \param i2c Either \ref i2c0 or \ref i2c1
@@ -146,7 +146,20 @@ proc writeBlocking*(i2c: ptr I2cInst, address: I2cAddress, data: ptr uint8, len:
   ##           and the next transfer will begin with a Restart rather than a Start.
   ## \return Number of bytes written, or PICO_ERROR_GENERIC if address not acknowledged, no device present.
 
-proc readBlocking*(i2c: ptr I2cInst, address: I2cAddress, dest: ptr uint8, size: csize_t, noStop: bool): cint {.importc: "i2c_read_blocking".}
+proc writeBurstBlocking*(i2c: ptr I2cInst; address: I2cAddress; src: ptr uint8; len: csize_t): cint {.importc: "i2c_write_burst_blocking".}
+  ## Attempt to write specified number of bytes to address, blocking in burst mode
+  ##
+  ## This version of the function will not issue a stop and will not restart on the next write.
+  ## This allows you to write consecutive bytes of data without having to resend a stop bit and
+  ## (for example) without having to send address byte(s) repeatedly
+  ##
+  ## \param i2c Either \ref i2c0 or \ref i2c1
+  ## \param addr 7-bit address of device to read from
+  ## \param dst Pointer to buffer to receive data
+  ## \param len Length of data in bytes to receive
+  ## \return Number of bytes read, or PICO_ERROR_GENERIC if address not acknowledged or no device present.
+
+proc readBlocking*(i2c: ptr I2cInst; address: I2cAddress; dst: ptr uint8; size: csize_t; noStop: bool): cint {.importc: "i2c_read_blocking".}
   ## Attempt to read specified number of bytes from address, blocking
   ##
   ## \param i2c Either \ref i2c0 or \ref i2c1
@@ -155,6 +168,20 @@ proc readBlocking*(i2c: ptr I2cInst, address: I2cAddress, dest: ptr uint8, size:
   ## \param len Length of data in bytes to receive
   ## \param nostop  If true, master retains control of the bus at the end of the transfer (no Stop is issued),
   ##           and the next transfer will begin with a Restart rather than a Start.
+  ## \return Number of bytes read, or PICO_ERROR_GENERIC if address not acknowledged or no device present.
+
+proc readBurstBlocking*(i2c: ptr I2cInst; address: I2cAddress; dst: ptr uint8; size: csize_t): cint {.importc: "i2c_read_burst_blocking".}
+  ## Attempt to read specified number of bytes from address, blocking in burst mode
+  ##  \ingroup hardware_i2c
+  ##
+  ## This version of the function will not issue a stop and will not restart on the next read.
+  ## This allows you to read consecutive bytes of data without having to resend a stop bit and
+  ## (for example) without having to send address byte(s) repeatedly
+  ##
+  ## \param i2c Either \ref i2c0 or \ref i2c1
+  ## \param addr 7-bit address of device to read from
+  ## \param dst Pointer to buffer to receive data
+  ## \param len Length of data in bytes to receive
   ## \return Number of bytes read, or PICO_ERROR_GENERIC if address not acknowledged or no device present.
 
 proc getWriteAvailable*(i2c: ptr I2cInst): cuint {.importc: "i2c_get_write_available".}

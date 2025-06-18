@@ -2,6 +2,8 @@ import ../helpers
 {.localPassC: "-I" & picoSdkPath & "/src/rp2_common/pico_double/include".}
 {.push header: "pico/double.h".}
 
+# TODO: Add missing functions
+
 proc fix2double*(m: int32; e: cint): cdouble {.importc: "fix2double".}
 proc ufix2double*(m: uint32; e: cint): cdouble {.importc: "ufix2double".}
 proc fix642double*(m: int64; e: cint): cdouble {.importc: "fix642double".}

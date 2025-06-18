@@ -259,7 +259,7 @@ proc peekFullResult*(interp: ptr InterpHw): uint32 {.importc: "interp_peek_full_
   ## \param interp Interpolator instance, interp0 or interp1.
   ## \return The content of the FULL register
 
-proc addAccumulator*(interp: ptr InterpHw; lane: Lane; val: uint32) {.importc: "interp_add_accumulater".}
+proc addAccumulator*(interp: ptr InterpHw; lane: Lane; val: uint32) {.importc: "interp_add_accumulator".}
   ## Add to accumulator
   ##
   ## Atomically add the specified value to the accumulator on the specified lane

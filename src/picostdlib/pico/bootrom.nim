@@ -2,6 +2,7 @@ import ../helpers
 {.localPassC: "-I" & picoSdkPath & "/src/rp2_common/pico_bootrom/include".}
 {.push header: "pico/bootrom.h".}
 
+# TODO: Turn into functions
 type
   rom_popcount32_fn* {.importc.} = proc (a1: uint32): uint32 {.cdecl.}
   rom_reverse32_fn* {.importc.} = proc (a1: uint32): uint32 {.cdecl.}
@@ -60,6 +61,11 @@ proc romDataLookup*(code: uint32): pointer {.importc: "rom_data_lookup".}
   ##
   ## \param code the code
   ## \return a pointer to the data, or NULL if the code does not match any bootrom function
+
+proc romDataLookupInline*(code: uint32): pointer {.importc: "rom_data_lookup_inline".}
+  ## Lookup a bootrom data address by its code. This method is forcibly inlined into the caller for FLASH/RAM sensitive code usage
+  ## \param code the code
+  ## \return a pointer to the data, or NULL if the code does not match any bootrom data
 
 proc romFuncsLookup*(table: ptr uint32; count: cuint): bool {.importc: "rom_funcs_lookup".}
   ## Helper function to lookup the addresses of multiple bootrom functions

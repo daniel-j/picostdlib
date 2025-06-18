@@ -502,3 +502,34 @@ proc `<=`*(timeLeft, timeRight: AbsoluteTime): bool {.inline.} =
 proc `<`*(timeLeft, timeRight: AbsoluteTime): bool {.inline.} =
   timeLeft - timeRight < 0
 
+
+
+import std/posix
+
+proc posix_gettimeofday(tp: var Timeval, unused: pointer = nil) {.importc: "gettimeofday", header: "<sys/time.h>".}
+
+proc clock_gettime(clock_id: ClockId; tp: ptr Timespec): cint {.exportc: "clock_gettime".} =
+  tp.tv_nsec = 0
+  tp.tv_sec = posix.Time(0)
+  var tk: uint64
+  var tv: Timeval
+  if clock_id == CLOCK_REALTIME or clock_id == CLOCK_MONOTONIC:
+    posix_gettimeofday(tv, nil)
+    tp.tv_sec = tv.tv_sec
+    tp.tv_nsec = tv.tv_usec * 1000
+  elif clock_id == CLOCK_PROCESS_CPUTIME_ID or clock_id == CLOCK_THREAD_CPUTIME_ID:
+    tk = timeUs64()
+    tp.tv_sec = posix.Time tk div 1000;
+    tp.tv_nsec = int (tk mod 1000) * 1_000_000
+  return 0
+
+type
+  Timespecconst {.importc: "const struct timespec", header: "<time.h>", final, pure.} = object
+    tv_sec*: posix.Time              ## Seconds.
+    tv_nsec*: int              ## Nanoseconds.
+
+
+proc nanosleep(duration: var Timespecconst; rem: var Timespec): cint {.exportc: "nanosleep".} =
+  # TODO: implement rem support
+  sleepUs(duration.tv_sec.uint32 * 1_000_000 + duration.tv_nsec.uint32 div 1_000)
+  return 0
