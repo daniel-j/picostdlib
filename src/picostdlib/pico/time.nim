@@ -508,7 +508,7 @@ import std/posix, std/times
 proc gettimeofday(tp: var Timeval, unused: pointer = nil) {.importc: "gettimeofday", header: "<sys/time.h>".}
 proc settimeofday(tv: var Timeval; tz: pointer = nil): cint {.importc: "settimeofday", header: "<sys/time.h>".}
 
-proc clock_gettime(clock_id: ClockId; tp: ptr Timespec): cint {.exportc: "clock_gettime".} =
+proc clock_gettime(clock_id: ClockId; tp: ptr Timespec): cint {.exportc: "clock_gettime", cdecl.} =
   tp.tv_nsec = 0
   tp.tv_sec = posix.Time(0)
   var tk: uint64
@@ -528,7 +528,7 @@ type
     tv_sec*: posix.Time ## Seconds.
     tv_nsec*: int       ## Nanoseconds.
 
-proc nanosleep(duration: var Timespecconst; rem: var Timespec): cint {.exportc: "nanosleep".} =
+proc nanosleep(duration: ptr Timespecconst; rem: ptr Timespec): cint {.exportc: "nanosleep", cdecl.} =
   ## Implemented to support Nim's sleep() function
   # TODO: implement rem support
   sleepUs(duration.tv_sec.uint32 * 1_000_000 + duration.tv_nsec.uint32 div 1_000)
