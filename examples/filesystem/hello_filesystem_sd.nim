@@ -24,8 +24,6 @@ proc fsInit(): bool =
 
   return true
 
-proc settimeofday(tv: var Timeval; tz: pointer = nil): cint {.importc: "settimeofday", header: "<time.h>".}
-
 if not fsInit():
   echo "Failed to mount filesystem!"
 else:
@@ -34,8 +32,7 @@ else:
   block:
     removeFile("/sd/HELLO.txt")
 
-    var futureTime = Timeval(tv_sec: posix.Time(1750000000))
-    discard settimeofday(futureTime)
+    setTime(fromUnix(1750000000))
 
     sleepMs(1000)
 
